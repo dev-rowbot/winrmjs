@@ -2,7 +2,6 @@ var http = require('http');
 var uuid = require('node-uuid');
 var js2xmlparser = require("js2xmlparser");
 var parsestring = require('xml2js').parseString;
-var krb = require('krbclient');
 
 function getsoapheader(param,callback) {
 	if (!param['message_id']) param['message_id'] = uuid.v4();
@@ -103,7 +102,7 @@ function open_shell(params, callback) {
 				}
 			]
 		})
-		
+
 		send_http(res,params.host,params.port,params.path,params.auth,function(err,result) {
 			if (result['s:Envelope']['s:Body'][0]['s:Fault']) {
 				callback(new Error(result['s:Envelope']['s:Body'][0]['s:Fault'][0]['s:Code'][0]['s:Subcode'][0]['s:Value'][0]));
@@ -152,7 +151,7 @@ function run_command(params,callback) {
 	});
 };
 
-function get_command_output(params,callback) { 
+function get_command_output(params,callback) {
 	getsoapheader({
 		"resource_uri": "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd",
 		"action": "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Receive",
@@ -197,7 +196,7 @@ function cleanup_command(params,callback) {
 			}
 		}
 		var uuid = res['env:Header']['a:MessageID'];
-		
+
 		send_http(res,params.host,params.port,params.path,params.auth,function(err,result) {
 			var relatesto = result['s:Envelope']['s:Header'][0]['a:RelatesTo'][0];
 			if (relatesto == uuid) {
@@ -280,7 +279,7 @@ function run(command,host,port,path,username,password,callback) {
 	//Todo: implement HTTPS
 	var auth = 'Basic ' + new Buffer(runparams.username + ':' + runparams.password).toString('base64');
 	runparams['auth'] = auth;
-	
+
 	open_shell(runparams, function(err, response) {
 		if (err) { return false; }
 		runparams.shellid = response;
@@ -296,7 +295,7 @@ function run(command,host,port,path,username,password,callback) {
 				close_shell(runparams, function(err,response) {
 					callback(null,runparams['results']);
 				});
-			});			
+			});
 		}
 		function pollCommand() {
 			get_command_output(runparams,function(err,response) {
@@ -322,4 +321,4 @@ function run(command,host,port,path,username,password,callback) {
 	});
 }
 
-module.exports(run);
+module.exports = run;
