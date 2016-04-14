@@ -5,9 +5,9 @@
 	"description": "Node.js module for WinRM",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/jacobludriks/winrmjs.git"
+		"url": "git://github.com/barak-shirali/winrmjs.git"
 	},
-	"homepage": "http://github.com/jacobludriks/winrmjs",
+	"homepage": "http://github.com/barak-shirali/winrmjs",
 	"main": "index.js",
 	"keywords": [
 		"winrm",
@@ -23,8 +23,7 @@
 	"dependencies": {
 		"js2xmlparser": "^0.1.7",
 		"node-uuid": "^1.4.2",
-		"xml2js": "^0.4.5",
-		"krbclient": "0.1.0"
+		"xml2js": "^0.4.5"
 	},
 	"devDependencies": {},
 	"optionalDependencies": {}
