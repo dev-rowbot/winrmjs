@@ -9,3 +9,4 @@ coverage
 build/Release
 .lock-wscript
 node_modules
+test.js

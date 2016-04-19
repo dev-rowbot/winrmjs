@@ -1,30 +1,32 @@
 {
-	"name": "winrmjs",
-	"version": "0.0.1",
-	"author": "Jacob Ludriks",
-	"description": "Node.js module for WinRM",
-	"repository": {
-		"type": "git",
-		"url": "git://github.com/barak-shirali/winrmjs.git"
-	},
-	"homepage": "http://github.com/barak-shirali/winrmjs",
-	"main": "index.js",
-	"keywords": [
-		"winrm",
-		"windows",
-		"powershell"
-	],
-	"engines": {
-		"node": ">=0.12.0"
-	},
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
-	},
-	"dependencies": {
-		"js2xmlparser": "^0.1.7",
-		"node-uuid": "^1.4.2",
-		"xml2js": "^0.4.5"
-	},
-	"devDependencies": {},
-	"optionalDependencies": {}
+  "name": "winrmjs",
+  "version": "0.0.1",
+  "author": "Jacob Ludriks",
+  "description": "Node.js module for WinRM",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/barak-shirali/winrmjs.git"
+  },
+  "homepage": "http://github.com/barak-shirali/winrmjs",
+  "main": "index.js",
+  "keywords": [
+    "winrm",
+    "windows",
+    "powershell"
+  ],
+  "engines": {
+    "node": ">=0.12.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "js2xmlparser": "^0.1.7",
+    "lodash": "^4.11.1",
+    "node-uuid": "^1.4.2",
+    "q": "^1.4.1",
+    "xml2js": "^0.4.5"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {}
 }
