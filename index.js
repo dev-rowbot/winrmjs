@@ -175,7 +175,12 @@ function get_command_output(params,callback) {
 		}
 		send_http(res,params.host,params.port,params.path,params.auth,function(err,result) {
 			if (result) {
-				var exitCode = result['s:Envelope']['s:Body'][0]['rsp:ReceiveResponse'][0]['rsp:CommandState'][0]['rsp:ExitCode'][0];
+				var exitCode = result['s:Envelope']['s:Body'][0]['rsp:ReceiveResponse'][0]['rsp:CommandState'][0]['rsp:ExitCode'];
+				if (exitCode) {
+					exitCode = exitCode[0];
+				} else {
+					exitCode = 1;
+				}
 				var output = _(result['s:Envelope']['s:Body'][0]['rsp:ReceiveResponse'][0]['rsp:Stream']).filter(function(s) {
 					return s._;
 				}).map(function(s){
