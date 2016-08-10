@@ -24,7 +24,7 @@ For powershell, use `run_powershell`.
 ```
 var winrm = require('winrm');
 var run_params = winrm.get_run_params(host,port,path,username,password);
-var commands = ['ipconfig', 'ipconfig']; // commands to run
+var commands = ['ipconfig', 'powershell -Command "Test-Connection 192.168.58.3"']; // commands to run
 
 winrm.open_shell(run_params)
 .then(function(shell_id){

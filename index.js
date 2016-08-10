@@ -5,7 +5,7 @@ var _ = require('lodash');
 var parsestring = require('xml2js').parseString;
 var q = require('q');
 
-function getsoapheader(param,callback) {
+function getsoapheader(param, callback) {
 	if (!param['message_id']) param['message_id'] = uuid.v4();
 	if (!param['resource_uri']) param['resource_uri'] = null;
 	var header = {
@@ -78,7 +78,7 @@ function open_shell(params, callback) {
 	getsoapheader({
 		"resource_uri": "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd",
 		"action": "http://schemas.xmlsoap.org/ws/2004/09/transfer/Create"
-	},function(res) {
+	}, function (res) {
 		res['env:Body'] = {
 			"rsp:Shell": [
 				{
@@ -105,7 +105,7 @@ function open_shell(params, callback) {
 			]
 		})
 
-		send_http(res,params.host,params.port,params.path,params.auth,function(err,result) {
+		send_http(res, params.host, params.port, params.path, params.auth, function (err, result) {
 			if (err) {
 				// 401 or 403 error here for authentication
 				callback(err);
@@ -115,21 +115,21 @@ function open_shell(params, callback) {
 				callback(new Error(result['s:Envelope']['s:Body'][0]['s:Fault'][0]['s:Code'][0]['s:Subcode'][0]['s:Value'][0]));
 			} else {
 				var shell_id = result['s:Envelope']['s:Body'][0]['rsp:Shell'][0]['rsp:ShellId'][0];
-				callback(null,shell_id);
+				callback(null, shell_id);
 			}
 		});
 	});
 }
 
-function run_command(params,callback) {
+function run_command(params, callback) {
 	getsoapheader({
 		"resource_uri": "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd",
 		"action": "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Command",
 		"shell_id": params.shell_id
-	}, function(res) {
+	}, function (res) {
 		res['env:Header']['w:OptionSet'] = [];
 		res['env:Header']['w:OptionSet'].push({
-			"w:Option":	[
+			"w:Option": [
 				{
 					"@": {
 						"Name": "WINRS_CONSOLEMODE_STDIN"
@@ -150,19 +150,19 @@ function run_command(params,callback) {
 				"rsp:Command": params.command
 			}
 		})
-		send_http(res,params.host,params.port,params.path,params.auth,function(err,result) {
+		send_http(res, params.host, params.port, params.path, params.auth, function (err, result) {
 			var command_id = result['s:Envelope']['s:Body'][0]['rsp:CommandResponse'][0]['rsp:CommandId'][0];
-			callback(null,command_id);
+			callback(null, command_id);
 		});
 	});
 };
 
-function get_command_output(params,callback) {
+function get_command_output(params, callback) {
 	getsoapheader({
 		"resource_uri": "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd",
 		"action": "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Receive",
 		"shell_id": params.shell_id
-	}, function(res) {
+	}, function (res) {
 		res['env:Body'] = {
 			"rsp:Receive": {
 				"rsp:DesiredStream": {
@@ -173,7 +173,7 @@ function get_command_output(params,callback) {
 				}
 			}
 		}
-		send_http(res,params.host,params.port,params.path,params.auth,function(err,result) {
+		send_http(res, params.host, params.port, params.path, params.auth, function (err, result) {
 			if (result) {
 				var exitCode = result['s:Envelope']['s:Body'][0]['rsp:ReceiveResponse'][0]['rsp:CommandState'][0]['rsp:ExitCode'];
 				if (exitCode) {
@@ -181,26 +181,29 @@ function get_command_output(params,callback) {
 				} else {
 					exitCode = 1;
 				}
-				var output = _(result['s:Envelope']['s:Body'][0]['rsp:ReceiveResponse'][0]['rsp:Stream']).filter(function(s) {
+				stateValue = result['s:Envelope']['s:Body'][0]['rsp:ReceiveResponse'][0]['rsp:CommandState'][0]['$']['State'];
+				state = stateValue.substring(stateValue.lastIndexOf('/') + 1);
+				var output = _(result['s:Envelope']['s:Body'][0]['rsp:ReceiveResponse'][0]['rsp:Stream']).filter(function (s) {
 					return s._;
-				}).map(function(s){
+				}).map(function (s) {
 					return new Buffer(s._, 'base64').toString('ascii');
 				}).join('');
 				callback(null, {
 					output: output,
-					exitCode: exitCode
+					exitCode: exitCode,
+					state: state
 				});
 			}
 		});
 	});
 }
 
-function cleanup_command(params,callback) {
+function cleanup_command(params, callback) {
 	getsoapheader({
 		"resource_uri": "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd",
 		"action": "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Signal",
 		"shell_id": params.shell_id
-	}, function(res) {
+	}, function (res) {
 		res['env:Body'] = {
 			"rsp:Signal": {
 				"@": {
@@ -211,7 +214,7 @@ function cleanup_command(params,callback) {
 		}
 		var uuid = res['env:Header']['a:MessageID'];
 
-		send_http(res,params.host,params.port,params.path,params.auth,function(err,result) {
+		send_http(res, params.host, params.port, params.path, params.auth, function (err, result) {
 			var relatesto = result['s:Envelope']['s:Header'][0]['a:RelatesTo'][0];
 			if (relatesto == uuid) {
 				callback(null, "Closed Command");
@@ -222,16 +225,16 @@ function cleanup_command(params,callback) {
 	});
 }
 
-function close_shell(params,callback) {
+function close_shell(params, callback) {
 	getsoapheader({
 		"resource_uri": "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd",
 		"action": "http://schemas.xmlsoap.org/ws/2004/09/transfer/Delete",
 		"shell_id": params.shell_id
-	}, function(res) {
-		res['env:Body'] = { }
+	}, function (res) {
+		res['env:Body'] = {}
 		var uuid = res['env:Header']['a:MessageID']
 		//strip "uuid:" from var uuid
-		send_http(res,params.host,params.port,params.path,params.auth,function(err,result) {
+		send_http(res, params.host, params.port, params.path, params.auth, function (err, result) {
 			var relatesto = result['s:Envelope']['s:Header'][0]['a:RelatesTo'][0];
 			if (relatesto == uuid) {
 				callback(null, "Closed shell");
@@ -242,8 +245,8 @@ function close_shell(params,callback) {
 	});
 }
 
-function send_http(data,host,port,path,auth,callback) {
-	var xmldata = js2xmlparser('env:Envelope',data);
+function send_http(data, host, port, path, auth, callback) {
+	var xmldata = js2xmlparser('env:Envelope', data);
 	var options = {
 		hostname: host,
 		port: port,
@@ -256,15 +259,15 @@ function send_http(data,host,port,path,auth,callback) {
 			'Authorization': auth
 		},
 	};
-	var req = http.request(options, function(response) {
+	var req = http.request(options, function (response) {
 		if (!(response.statusCode == '200')) return callback(new Error(response.statusCode));
 		response.setEncoding('utf8');
 		var resStr = '';
 		response.on('data', function (chunk) {
 			resStr += chunk;
 		});
-		response.on('end', function() {
-			parsestring(resStr, function(err, chunkparsed) {
+		response.on('end', function () {
+			parsestring(resStr, function (err, chunkparsed) {
 				if (err) {
 					callback(new Error(err));
 				}
@@ -272,52 +275,60 @@ function send_http(data,host,port,path,auth,callback) {
 			});
 		});
 	});
-	req.on('error', function(e) {
+	req.on('error', function (e) {
 		console.log('problem with request: ' + e.message);
 	});
 	req.write(xmldata);
 	req.end();
 }
 
-function run(command,host,port,path,username,password,callback) {
+function run(command, host, port, path, username, password, callback) {
 	var runparams = get_run_params(host, port, path, username, password);
 	runparams['command'] = command;
-	open_shell(runparams, function(err, response) {
+	open_shell(runparams, function (err, response) {
 		if (err) {
 			return callback(err, response);
 		}
 		runparams.shell_id = response;
 		function receiveddata(response) {
 			if (response == false) {
-			  //command not finished, trying loop again
-			  return false;
+				//command not finished, trying loop again
+				return false;
 			}
 			//command has finished running, getting results
 			runparams['results'] = response;
-			cleanup_command(runparams, function(err, response) {
+			cleanup_command(runparams, function (err, response) {
 				if (err) { return false; }
-				close_shell(runparams, function(err,response) {
-					callback(null,runparams['results']);
+				close_shell(runparams, function (err, response) {
+					callback(null, runparams['results']);
 				});
 			});
 		}
+		var totalResponse = {};
+		totalResponse.output = '';
 		function pollCommand() {
-			get_command_output(runparams,function(err,response) {
+			get_command_output(runparams, function (err, response) {
 				//finished
 				if (err) {
 					receiveddata(FALSE);
 					return
 				}
-				if (response) {
+				if (response.state != 'Running') {
+					if (totalResponse.output !== '') {
+						response.output = totalResponse.output + response.output;
+					}
 					receiveddata(response);
 					return;
 				}
-				setTimeout(function() {
+				if (response.state == 'Running') {
+					totalResponse.output += response.output;
+				}
+				setTimeout(function () {
 					pollCommand()
 				}, 1000);
 			});
 		}
-		run_command(runparams,function(err, response) {
+		run_command(runparams, function (err, response) {
 			if (err) { return false; }
 			runparams.command_id = response;
 			pollCommand();
@@ -328,17 +339,25 @@ function run(command,host,port,path,username,password,callback) {
 function get_command_output_promisified(runparams) {
 	var deferred = q.defer();
 	var retries = 10;
+
+	var totalResponse = {};
+	totalResponse.output = '';
+
 	function poll_command() {
-		get_command_output(runparams,function(err,response) {
+		get_command_output(runparams, function (err, response) {
 			if (err) {
 				return deferred.reject(err);
-			} else if (response) {
+			} else if (response.state != 'Running') {
+				response.output = totalResponse.output + response.output;
 				return deferred.resolve(response);
 			} else {
+				if (response.state == 'Running') {
+					totalResponse.output += response.output;
+				}
 				retries--;
-				if (retries>0) {
-					setTimeout(function() {
-						pollCommand()
+				if (retries > 0) {
+					setTimeout(function () {
+						poll_command()
 					}, 1000);
 				} else {
 					return deferred.reject(new Error('Timeout on command result'));
