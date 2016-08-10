@@ -4,6 +4,7 @@ var js2xmlparser = require("js2xmlparser");
 var _ = require('lodash');
 var parsestring = require('xml2js').parseString;
 var q = require('q');
+var fs = require('fs');
 
 function getsoapheader(param, callback) {
 	if (!param['message_id']) param['message_id'] = uuid.v4();
@@ -388,6 +389,33 @@ function get_run_params(host, port, path, username, password) {
 	return runparams;
 }
 
+
+function run_ps_script(runparams, script, callback) {
+	var psScript = '';
+	fs.readFile(script, 'utf8', function (err, data) {
+		if (err) {
+			return console.log(err);
+		}
+
+		psScript = data;
+
+		psCommand = psScript + '\n' + runparams.command;
+		console.log("=============================================");
+		console.log ('Command: ' + runparams.command);
+		console.log("=============================================");
+		console.log ('Script : \n' + psScript);
+		console.log("=============================================");
+		console.log ('Combined: \n' + psCommand);
+		console.log("=============================================");
+		var base64cmd = new Buffer(psCommand, 'utf16le').toString('base64');
+		runparams.command = 'powershell -encodedcommand ' + base64cmd;
+
+		return run_command(runparams, callback);
+
+	});
+
+}
+
 function run_ps(runparams, callback) {
 	var base64cmd = new Buffer(runparams.command, 'utf16le').toString('base64');
 	runparams.command = 'powershell -encodedcommand ' + base64cmd;
@@ -402,5 +430,6 @@ module.exports = {
 	close_command: q.denodeify(cleanup_command),
 	run_command: q.denodeify(run_command), // used to get command id
 	run_powershell: q.denodeify(run_ps), // run powershell
+	run_powershell_script: q.denodeify(run_ps_script), // run powershell
 	get_command_output: get_command_output_promisified // getting command result from stream
 };
