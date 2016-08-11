@@ -390,28 +390,43 @@ function get_run_params(host, port, path, username, password) {
 }
 
 
-function run_ps_script(runparams, script, callback) {
+function run_ps_script(runparams, scripts, callback) {
 	var psScript = '';
-	fs.readFile(script, 'utf8', function (err, data) {
-		if (err) {
-			return console.log(err);
-		}
+	if (typeof scripts === 'string') {
+		scripts = [scripts];
+	}
 
-		psScript = data;
-
-		psCommand = psScript + '\n' + runparams.command;
-		console.log("=============================================");
-		console.log ('Command: ' + runparams.command);
-		console.log("=============================================");
-		console.log ('Script : \n' + psScript);
-		console.log("=============================================");
-		console.log ('Combined: \n' + psCommand);
-		console.log("=============================================");
+	// need to concat all scripts together and then continue
+	function exec () {
+		psCommand = psScript + ' \n' + runparams.command + ' ';
+		/*
+					console.log("=============================================");
+					console.log('Command: ' + runparams.command);
+					console.log("=============================================");
+					console.log('Script : \n' + psScript);
+					console.log("=============================================");
+					console.log('Combined: \n' + psCommand);
+					console.log("=============================================");
+		*/
 		var base64cmd = new Buffer(psCommand, 'utf16le').toString('base64');
 		runparams.command = 'powershell -encodedcommand ' + base64cmd;
 
 		return run_command(runparams, callback);
+	}
 
+	var itemsProcessed = 0;
+	scripts.forEach(function (script) {
+		fs.readFile(script, 'utf8', function (err, data) {
+			if (err) {
+				return console.log(err);
+			}
+
+			psScript += '\n' + data + '\n';
+			itemsProcessed++;
+			if (itemsProcessed === scripts.length) {
+				exec();
+			}
+		});
 	});
 
 }
