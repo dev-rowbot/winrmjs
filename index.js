@@ -378,6 +378,7 @@ function get_run_params(host, port, path, username, password) {
 		path: path,
 		username: username,
 		password: password,
+		script_root: './scripts',
 		auth: null,
 		shell_id: null,
 		command_id: null,
@@ -416,7 +417,7 @@ function run_ps_script(runparams, scripts, callback) {
 
 	var itemsProcessed = 0;
 	scripts.forEach(function (script) {
-		fs.readFile(script, 'utf8', function (err, data) {
+		fs.readFile(runparams.script_root + script, 'utf8', function (err, data) {
 			if (err) {
 				return console.log(err);
 			}
