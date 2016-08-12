@@ -83,3 +83,9 @@ winrm.open_shell(run_params)
     });
 ```
 
+This will read the script file contents and execute it in Powershell before executing the specified command. 
+
+### Credit
+The original Winrmjs was developed by Jacob Ludriks - https://github.com/jacobludriks/winrmjs
+This fork builds on work done by Barak Shirali - https://github.com/barak-shirali/winrmjs
+

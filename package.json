@@ -1,13 +1,13 @@
 {
   "name": "winrmjs",
-  "version": "0.0.1",
-  "author": "Jacob Ludriks",
+  "version": "0.0.2",
+  "author": "Rowan Potgieter",
   "description": "Node.js module for WinRM",
   "repository": {
     "type": "git",
-    "url": "git://github.com/barak-shirali/winrmjs.git"
+    "url": "https://github.com/dev-rowbot/winrmjs"
   },
-  "homepage": "http://github.com/barak-shirali/winrmjs",
+  "homepage": "https://github.com/dev-rowbot/winrmjs",
   "main": "index.js",
   "keywords": [
     "winrm",
