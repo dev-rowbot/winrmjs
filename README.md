@@ -50,3 +50,36 @@ winrm.open_shell(run_params)
 });
 
 ```
+
+It is also possible to execute a locally stored Powershell script on the host machine.
+```
+var run_params = winrm.get_run_params(host, port, path, username, password);
+var commands = ['FindUser UserName'];
+
+winrm.open_shell(run_params)
+    .then(function (shell_id) {
+        run_params.shell_id = shell_id;
+        run_params.command = commands.join('; ');
+        return winrm.run_powershell_script(run_params, './scripts/find_user.ps1');
+    })
+    .then(function (command_id) {
+        run_params.command_id = command_id;
+        return winrm.get_command_output(run_params);
+    })
+    .then(function (res) {
+        console.log("Output   : " + res.output);
+        console.log("ExitCode : " + res.exitCode);
+        console.log("State    : " + res.state);
+        return winrm.close_command(run_params);
+    })
+    .then(function (res) {
+        return winrm.close_shell(run_params);
+    })
+    .catch(function (err) {
+        console.log(err);
+    })
+    .fin(function () {
+        console.log('Yay! Everything is done');
+    });
+```
+
