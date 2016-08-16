@@ -1,4 +1,5 @@
 var http = require('http');
+var https = require('https');
 var uuid = require('node-uuid');
 var js2xmlparser = require("js2xmlparser");
 var _ = require('lodash');
@@ -248,6 +249,7 @@ function close_shell(params, callback) {
 
 function send_http(data, host, port, path, auth, callback) {
 	var xmldata = js2xmlparser('env:Envelope', data);
+	request = http.request;
 	var options = {
 		hostname: host,
 		port: port,
@@ -260,7 +262,13 @@ function send_http(data, host, port, path, auth, callback) {
 			'Authorization': auth
 		},
 	};
-	var req = http.request(options, function (response) {
+	// Need to cater for https as well
+	if (port == 5986) {
+		request = https.request;
+		// may not be a good idea
+		options.rejectUnauthorized = false;
+	}
+	var req = request(options, function (response) {
 		if (!(response.statusCode == '200')) return callback(new Error(response.statusCode));
 		response.setEncoding('utf8');
 		var resStr = '';
