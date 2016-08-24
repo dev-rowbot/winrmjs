@@ -286,6 +286,7 @@ function send_http(data, host, port, path, auth, callback) {
 	});
 	req.on('error', function (e) {
 		console.log('problem with request: ' + e.message);
+		return callback(new Error(e.code));
 	});
 	req.write(xmldata);
 	req.end();
