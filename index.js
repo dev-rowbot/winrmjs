@@ -405,10 +405,12 @@ function run_ps_script(runparams, scripts, callback) {
 	if (typeof scripts === 'string') {
 		scripts = [scripts];
 	}
-
 	// need to concat all scripts together and then continue
-	function exec () {
-		psCommand = psScript + ' \n' + runparams.command + ' ';
+	function exec() {
+		// Powershell 5 seems to give a lot of extra info after the script/command return
+		// that we really don't need. 'SilentlyContinue' taken from
+		// https://github.com/WinRb/WinRM/blob/master/lib/winrm/helpers/powershell_script.rb
+		psCommand = "$ProgressPreference='SilentlyContinue';" + psScript + ' \n' + runparams.command + ' ';
 		/*
 					console.log("=============================================");
 					console.log('Command: ' + runparams.command);
@@ -442,7 +444,8 @@ function run_ps_script(runparams, scripts, callback) {
 }
 
 function run_ps(runparams, callback) {
-	var base64cmd = new Buffer(runparams.command, 'utf16le').toString('base64');
+	var cmd = "$ProgressPreference='SilentlyContinue';" + runparams.command;
+	var base64cmd = new Buffer(cmd, 'utf16le').toString('base64');
 	runparams.command = 'powershell -encodedcommand ' + base64cmd;
 	return run_command(runparams, callback);
 }
